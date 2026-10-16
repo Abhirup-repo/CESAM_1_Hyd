@@ -33,7 +33,6 @@
 
       real    :: wsmax    = WSMAX_EARTH ! max field capacity of soil water (m)
 
- 
 !     SIMBA - switches
 
       integer :: ncveg    = 1     ! compute new dcveg (0=keep initial state)
@@ -165,7 +164,6 @@
 ! guokun initialize albgmaxg
       albgmaxg(1:NUGP)=albgmax
 
-
       if (mars == 1) then
          wsmax = WSMAX_MARS
 !        nlandt = 0
@@ -220,21 +218,8 @@
       call mpbcr(rinisoil)
       call mpbcr(rnbiocats)
       call mpbcrn(dsoilz,NLSOIL)
-      call mpbcr(ss_pert)
       call mpscgp(albgmaxg,albgmaxm,1) ! guokun added
-      
-      print*, "Surface soil perturbation", ss_pert
 !     scale taus from years to seconds
-      
-      ! A.B Initialzize new field 
-      ss_field_gp(1:NUGP)=0.000001 
-      call mpscgp(ss_field_gp,ss_field_hor,1)
-      ss_flux_gp(1:NUGP)=0.1 
-
-      call mpscgp(ss_flux_gp,ss_flux_hor,1)
-      
-
-
 
       tau_veg  = tau_veg  * n_days_per_year * solar_day
       tau_soil = tau_soil * n_days_per_year * solar_day
@@ -434,9 +419,7 @@
          dalbclim(:) = albland
          dwcl(:,:)   = wsmax * drhsfull * drhsland
       endif
-
-
-
+      
       return
       end subroutine landini
 
@@ -450,7 +433,6 @@
       implicit none
       real :: zalbmin,zalbmax,zalbsnow,zdalb
       integer :: jhor
-      
         
 !
 !     get climatological values if t and/or w are non interactive
@@ -462,9 +444,6 @@
 !     soil
 !
 
-      ! A.B 
-! 
-      dwmax(:)=dwmax(:)+ss_field_hor(:)
       call soilstep
 
 !
@@ -472,7 +451,6 @@
 !
 
       call roffstep
-
 
 !
 !     set surface variables
@@ -495,7 +473,7 @@
          drhs(jhor)=1.
         else
          dalb(jhor)=dalbclim(jhor)
-         if (dwmax(jhor) > 0.0)                                        &                           
+         if (dwmax(jhor) > 0.0)                                        &
          drhs(jhor)=AMIN1(1., dwatc(jhor)/(drhsfull *dwmax(jhor)))
         endif
 
@@ -622,8 +600,6 @@
       real zctop(NHOR)        ! heat capacity (top soil/snow layer)
       real zsntop(NHOR)       ! snow depth (top soil/snow layer)
       real zztop(NHOR)        ! depth of the uppermost layer
-      real minimumval(NHOR)
-      real maximumval (NHOR)
 !
 !     debug
 !
@@ -649,12 +625,7 @@
       zdsnowz(:)=0.
       zhfls(:)=0.
       zhflm(:)=0.
-
-!      zztop(:)=dztop
-! A.B 
-      zztop(:)=0.1 
-      zztop(:)=zztop(:)+ss_flux_hor(:)
-
+      zztop(:)=dztop
 !
       do jlev=1,NLSOIL
        where(dls(:) > 0.0 .and. dglac(:) > 0.0)
@@ -668,8 +639,7 @@
         zsoilz(:,jlev)=dsoilz(jlev)
        endwhere
       enddo
-
-
+!
       where(dsnowz(:) == 0.0) dsnowt(:)=TMELT
 !
 !     copy heatflux
@@ -695,10 +665,8 @@
       enddo
 !
 !     surface temperature and heat flux into the soil
-
-!A.B  
-
-  
+!
+      
       where(dls(:) > 0.0)
 !
 !     new properties of the top dztop meters (mixed soil/snow layer):
@@ -713,10 +681,8 @@
 !
        zsnowz(:)=AMIN1(dsnowz(:)*1000./rhosnow,zsnowmax)-zsntop(:)
        zsoilz1(:)=zsoilz(:,1)+zsnowz(:)
-       
        zdiff1(:)=zdiff(:,1)*snowdiff*zsoilz1(:)                         &
      &          /(snowdiff*zsoilz(:,1)+zdiff(:,1)*zsnowz(:))
-
        zcap1(:)=zcap(:,1)*snowcap*zsoilz1(:)                            &
      &         /(zcap(:,1)*zsnowz(:)+snowcap*zsoilz(:,1))
 !
@@ -727,12 +693,8 @@
              /(zctop(:)*zztop(:)/zdelt+2.*zdiff1(:)/zsoilz1(:)) 
 !
 !     heat flux into the soil
-!     
-      
-      
-      zhfls(:)=2.*zdiff1(:)/zsoilz1(:)*(dts(:)-dsoilt(:,1))
-       
-      
+!
+       zhfls(:)=2.*zdiff1(:)/zsoilz1(:)*(dts(:)-dsoilt(:,1))
 !
       endwhere
    
@@ -775,8 +737,7 @@
      &          /(snowdiff*zsoilz(:,1)+zdiff(:,1)*zsnowz(:))
        zcap1(:)=zcap(:,1)*snowcap*zsoilz1(:)                            &
      &         /(zcap(:,1)*zsnowz(:)+snowcap*zsoilz(:,1))
-!     
-
+!
       endwhere
      
 !$taf store dsnowz,zhflm = inner1, rec = 1 + nstep2
@@ -1107,14 +1068,7 @@
 
       subroutine soilstep
       use landmod
-      use pumamod
-      use observation, only : getnudg, getnudg2d
       implicit none
-      real :: soilw(NUGP)=0  
-      real :: soilwt(NHOR)=0
-      real :: soilgt(NHOR)=0
-      real :: diff 
-      integer :: i 
 !
 !     calculate snow and temperatures
 !
@@ -1133,24 +1087,6 @@
 !       print*,minval(dtclim,mask=(dls(:) > 0.0)),minval(dtclim,mask=(dls(:) .le. 0.0)) ! debug, FastOpt
 !       stop ! debug, FastOpt
       end if
-
-      if (makenudge==1) then
-            soilw=0
-            soilwt=0
-      if(mypid==NROOT) then
-      if (smnudg>0) then 
-!      print*, "Reading Soil moisture data"
-      call getnudg2d(nstep,184,soilw) ! nudging for former step:pressure
-      endif
-      endif
-      call mpscgp(soilw(:),soilwt(:),1)
-!      call mpgagp(soilw(:),soilwt(:),1)
-!      call mpsumbcr(soilwt(:),NHOR)
-!      dwatc(:)=dwatc(:)+delt2*smnudg *(soilwt(:)-dwatc(:))/(1.+smnudg *delt2)   
-      dwatc(1:NHOR) = dwatc(1:NHOR) + (delt2 * smnudg * (soilwt(1:NHOR) - dwatc(1:NHOR))) / &
-                (1.0 + smnudg * delt2)
-      endif
-
 !
 !     calculate soil water and runoff
 !

@@ -32,7 +32,6 @@ MODULE mo_mapping
   use pumamod, only :tdissd,tdissz,tdisst,tdissq,tfrc, dt,dls,ww
   use pumamod, only :th2ocg,tswr1g,tswr2g,tswr2g,tswr3g,tpofmtg,acllwrg,albgmaxg,rcritg,alpha1g,beta1g,gamma1g
   use pumamod, only :th2ocm,tswr1m,tswr2m,tswr2m,tswr3m,tpofmtm,acllwrm,albgmaxm,rcritm,alpha1m,beta1m,gamma1m
-  use pumamod, only: ss_field_gp,ss_flux_gp, ss_field_hor,ss_flux_hor
   use calmod, only : n_days_per_year
 !  use miscmod
   use fluxmod, only : vdiff_lamm,vdiff_d,vdiff_c,vdiff_b
@@ -175,24 +174,21 @@ SUBROUTINE cont2mod(n,xarg)
 #elif (NX-NX_OCEAN)==28672
 ! selected from the 36 parameters based on adjoint sensitivity
 !     22 16   7  4  31 34  6 5 32 3 33
-     call setmodarray_d01(NUGP,th2ocg(:),1,0.3,"th2oc")
-     call setmodarray_d01(NUGP,acllwrg(:),NUGP+1,0.25,"acllwr")
-     call setmodarray_d01(NUGP,tswr1g(:),2*NUGP+1,0.2,"tswr1")
-     call setmodarray_d01(NUGP,tswr2g(:),3*NUGP+1,0.5,"tswr2")
-     call setmodarray_d01(NUGP,tswr3g(:),4*NUGP+1,0.2,"tswr3")
-     call setmodarray_d01(NUGP,tpofmtg(:),5*NUGP+1,1.1,"tpofmtg")
-     call setmodarray_d01(NUGP,albgmaxg(:),6*NUGP+1,1.0,"albgmaxg")
-     call setmodarray_d01(NUGP,rcritg(:,7),7*NUGP+1,1.0,"rcrit7")
-     call setmodarray_d01(NUGP,rcritg(:,8),8*NUGP+1,1.0,"rcrit8")
-     call setmodarray_d01(NUGP,rcritg(:,9),9*NUGP+1,1.0,"rcrit9")
-     call setmodarray_d01(NUGP,rcritg(:,10),10*NUGP+1,1.0,"rcrit10")
-     call setmodarray_d01(NUGP,alpha1g(:),11*NUGP+1,5.0,"alpha1")
-!     call setmodarray_d01(NUGP,beta1g(:),12*NUGP+1,5.0,"beta1")
-    !  call setmodarray_d01(NUGP,gamma1g(:),13*NUGP+1,5.0)
-!A.B 
-    call setmodarray_d01(NUGP,ss_flux_gp(:),12*NUGP+1,0.3,"sf")
-    call setmodarray_d01(NUGP,ss_field_gp(:),13*NUGP+1,0.5,"ss")
-
+     call setmodarray_d01(NUGP,th2ocg(:),1,0.3)
+     call setmodarray_d01(NUGP,acllwrg(:),NUGP+1,0.25)
+     call setmodarray_d01(NUGP,tswr1g(:),2*NUGP+1,0.2)
+     call setmodarray_d01(NUGP,tswr2g(:),3*NUGP+1,0.5)
+     call setmodarray_d01(NUGP,tswr3g(:),4*NUGP+1,0.2)
+     call setmodarray_d01(NUGP,tpofmtg(:),5*NUGP+1,1.1)
+     call setmodarray_d01(NUGP,albgmaxg(:),6*NUGP+1,1.0)
+     call setmodarray_d01(NUGP,rcritg(:,7),7*NUGP+1,1.0)
+     call setmodarray_d01(NUGP,rcritg(:,8),8*NUGP+1,1.0)
+     call setmodarray_d01(NUGP,rcritg(:,9),9*NUGP+1,1.0)
+     call setmodarray_d01(NUGP,rcritg(:,10),10*NUGP+1,1.0)
+     call setmodarray_d01(NUGP,alpha1g(:),11*NUGP+1,5.0)
+     call setmodarray_d01(NUGP,beta1g(:),12*NUGP+1,5.0)
+     call setmodarray_d01(NUGP,gamma1g(:),13*NUGP+1,5.0)
+  
 ! smooth paramters to make them smooth
      call smooth_data( th2ocg(:), 1 )
      call smooth_data( acllwrg(:), 1 )
@@ -224,12 +220,8 @@ SUBROUTINE cont2mod(n,xarg)
      call smooth_data( beta1g(:), 1 )
      call smooth_data( gamma1g(:), 1 )
      call smooth_data( alpha1g(:), 1 )
-!     call smooth_data( beta1g(:), 1 )
-!     call smooth_data( gamma1g(:), 1 )
-! A.B 
-     call smooth_data( ss_flux_gp(:), 1 ) 
-     call smooth_data( ss_field_gp(:), 1 )
-     
+     call smooth_data( beta1g(:), 1 )
+     call smooth_data( gamma1g(:), 1 )
 
 #elif (NX-NX_OCEAN)==16384
 ! selected from the 36 parameters based on adjoint sensitivity
@@ -262,13 +254,157 @@ SUBROUTINE cont2mod(n,xarg)
      call smooth_data( beta1g(:), 1 )
      call smooth_data( gamma1g(:), 1 )
  
+
+
+! smooth the parameter space
+!      print '(a,2g30.20)','smoothing parameter bth2oc to: ',maxval(th2ocg(:)),minval(th2ocg(:))
+!     print '(a,2g30.20)','smoothing parameter bacllwr to: ',maxval(acllwrg(:)),minval(acllwrg(:))
+!     print '(a,2g30.20)','smoothing parameter btswr1 to: ',maxval(tswr1g),minval(tswr1g(:))
+!     print '(a,2g30.20)','smoothing parameter btswr2 to: ',maxval(tswr2g(:)),minval(tswr2g(:))
+!     print '(a,2g30.20)','smoothing parameter btswr3 to: ',maxval(tswr3g(:)),minval(tswr3g(:))
+!     print '(a,2g30.20)','smoothing parameter btpofmt to: ',maxval(tpofmtg(:)),minval(tpofmtg(:))
+!     print '(a,2g30.20)','smoothing parameter balbgmax to: ',maxval(albgmaxg(:)),minval(albgmaxg(:))
+!     print '(a,2g30.20)','smoothing parameter brcritg7 to: ',maxval(rcritg(:,7)),minval(rcritg(:,7))
+!     print '(a,2g30.20)','smoothing parameter brcritg8 to: ',maxval(rcritg(:,8)),minval(rcritg(:,8))
+!     print '(a,2g30.20)','smoothing parameter brcritg9 to: ',maxval(rcritg(:,9)),minval(rcritg(:,9))
+!     print '(a,2g30.20)','smoothing parameter brcritg10 to: ',maxval(rcritg(:,10)),minval(rcritg(:,10))
+ !
+!    call smooth_data( th2ocg(:), 1 )
+!     call smooth_data( acllwrg(:), 1 )
+!     call smooth_data( tswr1g(:), 1 )
+!     call smooth_data( tswr2g(:), 1 )
+!     call smooth_data( tswr3g(:), 1 )
+!     call smooth_data( tpofmtg(:), 1 )
+!     call smooth_data( albgmaxg(:), 1 )
+!     dtmp(:)= rcritg(:,7)
+!     call smooth_data( dtmp(:), 1 )
+!     rcritg(:,7) =dtmp(:)
+!     dtmp(:)= rcritg(:,8)
+!     call smooth_data( dtmp(:), 1 )
+!     rcritg(:,8) =dtmp(:)
+!     dtmp(:)= rcritg(:,9)
+!     call smooth_data( dtmp(:), 1 )
+!     rcritg(:,9) =dtmp(:)
+!     dtmp(:)= rcritg(:,10)
+!     call smooth_data( dtmp(:), 1 )
+!     rcritg(:,10) =dtmp(:)
+
+!     print '(a,2g30.20)','smoothing parameter acllwr to: ',maxval(acllwrg(:)),minval(acllwrg(:))
+!     print '(a,2g30.20)','smoothing parameter tswr1 to: ',maxval(tswr1g),minval(tswr1g(:))
+!     print '(a,2g30.20)','smoothing parameter tswr2 to: ',maxval(tswr2g(:)),minval(tswr2g(:))
+!     print '(a,2g30.20)','smoothing parameter tswr3 to: ',maxval(tswr3g(:)),minval(tswr3g(:))
+!     print '(a,2g30.20)','smoothing parameter tpofmt to: ',maxval(tpofmtg(:)),minval(tpofmtg(:))
+!     print '(a,2g30.20)','smoothing parameter albgmax to: ',maxval(albgmaxg(:)),minval(albgmaxg(:))
+!     print '(a,2g30.20)','smoothing parameter rcritg7 to: ',maxval(rcritg(:,7)),minval(rcritg(:,7))
+!     print '(a,2g30.20)','smoothing parameter rcritg8 to: ',maxval(rcritg(:,8)),minval(rcritg(:,8))
+!     print '(a,2g30.20)','smoothing parameter rcritg9 to: ',maxval(rcritg(:,9)),minval(rcritg(:,9))
+!     print '(a,2g30.20)','smoothing parameter rcritg10 to: ',maxval(rcritg(:,10)),minval(rcritg(:,10))
+!     where(th2ocg(:)>0.4)
+!           th2ocg(:)=0.4
+!     end where
+!     where(acllwrg(:)>0.4)
+!           acllwrg(:)=0.4
+!     end where
+!     where(tswr1g(:)>0.4)
+!           tswr1g(:)=0.4
+!     end where
+!     where(tswr2g(:)>0.4)
+!           tswr2g(:)=0.4
+!     end where
+!     where(tswr3g(:)>0.3)
+!           tswr3g(:)=0.3
+!     end where   
+!     tpofmtg(:)=1. 
+! plasimmod (puma) ========================================================
+!     call setmodarray(2,tfrc(1:2),1) ! time scale for rayleigh friction 1./(TWOPI*[days])
+!     call setmod(zp,3); tdissd(:) = zp   ! diffusion time scale for divergence 1./(TWOPI*[days])
+!     call setmod(zp,1); tdissz(:) = zp   ! diffusion time scale for vorticity 1./(TWOPI*[days])
+!     call setmod(zp,5); tdisst(:) = zp   ! diffusion time scale for temperature 1./(TWOPI*[days])
+!     call setmod(zp,6); tdissq(:) = zp   ! diffusion time scale for sp. humidity 1./(TWOPI*[days])
+! fluxmod =================================================================
+!  call setmod(vdiff_lamm, )   ! const. for vertical diffusion and surface fluxes
+!  call setmod(vdiff_b, )      ! const. for vertical diffusion and surface fluxes
+!  call setmod(vdiff_c, )      ! const. for vertical diffusion and surface fluxes
+!  call setmod(vdiff_d, )      ! const. for vertical diffusion and surface fluxes
+!  print*,"vdiff_d is/pr = ",vdiff_d,prior(ix-1)
+! radmod =================================================================
+!  call setmodarray(3,rcl1(1:3), )    ! cloud albedos spectral range 1
+!  call setmodarray(3,rcl2(1:3), )    ! cloud albedos spectral range 2
+!  call setmod(acllwr, )       ! mass absorption coefficient for clouds (lwr)
+!  call setmodarray(3,acl2(1:3), )    ! cloud absorptivities spectral range 2
+!     call setmod(tpofmt,2)        ! tuning of point of mean (lwr) transmissivity in layer
+!  call setmod(clgray, )     ! cloud grayness
+!     call setmod(tswr1,8)      ! tuning of cloud albedo range1
+!     call setmod(tswr2,9)      ! tuning of cloud back scattering c. range2
+!     call setmod(tswr3,10)        ! tuning of cloud s. scattering alb. range2
+!     call setmod(th2oc,11)      ! absorption coefficient for h2o continuum
+! rainmod ================================================================
+!  call setmodarray(NLEV,rcrit(1:NLEV))      ! critical relative hum. for non conv. clouds
+! landmod ================================================================
+!  call setmod(albsmin, )   ! min. albedo for snow
+!  call setmod(albsmax, )   ! max. albedo for snow
+!  call setmod(albsminf, )  ! min. albedo for snow (with forest)
+!  call setmod(albsmaxf, )  ! max. albedo for snow (with forest)
+!  call setmod(albgmin, )   ! min. albedo for glaciers
+!  call setmod(albgmax, )   ! max. albedo for glaciers
+!     call setmod(zp,7); dalbclim(:) = dalbclim(:) + zp ! clim. background albedo
+!  call setmod(dz0land)   ! roughness length land
+!  call setmod(drhsland, )  ! wetness factor land
+! landmod (simba) ========================================================
+!  call setmod(rlue); rlue = exp(rlue) ! c_lue - light use efficiency, use eps=1.e-10 and less for FD-check - remember that sqrt(tune) determines error of fomaxf!
+!  print*,"rlue is/pr/ln = ",rlue,prior(ix-1),log(rlue)
+!  call setmod(tau_soil, )  ! c_res - timescale for respiration
+!  call setmodarray(NUGP,pgrow(1:NUGP), )   ! biomass growth parameter
+!  call setmodarray(NUGP,plai(1:NUGP), )    ! aboveground growth parameter
+!  call setmodarray(NUGP,pgs(1:NUGP) )     ! stomatal conductance
+!  call setmodarray(NUGP,pz0_max(1:NUGP), ) ! maximum roughness
+! vegmod (simba) =========================================================
+!  call setmod(q10, )      ! q10 value for resp
+!  call setmod(ct_crit, )  ! conversion LAI
+!  call setmod(cveg_a, )   ! control of forest cover in vegetation module
+!  print*,"cveg_a is/pr = ",cveg_a,prior(ix-1)
+!  call setmod(cveg_b, )   ! forest cover conversion
+! seamod =================================================================
+!  call setmod(dz0sea, )   ! roughness length sea
+!  call setmod(dz0ice, ); dz0ice = exp(dz0ice)  ! "          "    ice, use eps=1.e-10 and for FD-check
+!  print*,"dz0ice is/pr/ln = ",dz0ice,prior(ix-1),log(dz0ice)
+!  call setmod(charnock,13) ! charnock constant
+! icemod =================================================================
+!  call setmod(xmind, )    ! minimal ice thickness (m) - threshold
+! oceanmod ===============================================================
+!  call setmod(vdiffk, )   ! vertikal diffusion coeff. [m**2/s]
  
 #else
 # error 'Control vector inconsistent, check NX, NX_OCEAN.'
 #endif
  end if
-
-      call mpbci(ix)
+!  call mpbcrn(tfrc,NLEV)
+!  call mpbcrn(tdissd,NLEV)
+!  call mpbcrn(tdissz,NLEV)
+!  call mpbcrn(tdisst,NLEV)
+!  call mpbcrn(tdissq,NLEV)
+!  call mpbcrn(rcrit,NLEV)
+!  call mpbcr(th2oc)
+!  call mpbcr(acllwr)
+!  call mpbcr(tswr1)
+!  call mpbcr(tswr2)
+!  call mpbcr(tswr3)
+!  call mpbcr(vdiff_lamm)
+!  call mpbcr(vdiff_b)
+!  call mpbcr(vdiff_c)
+!  call mpbcr(vdiff_d)
+!  call mpbcr(tpofmt)
+!  call mpbcr(albsmin)
+!  call mpbcr(albsmax)
+!  call mpbcr(albsminf)
+!  call mpbcr(albsmaxf)
+!  call mpbcr(albgmin)
+!  call mpbcr(albgmax)
+!  call mpbcr(dz0land)
+!  call mpbcr(drhsland)
+!  call mpbcr(dz0sea)
+!  call mpbcr(dz0ice)
+  call mpbci(ix)
       call mpscgp(th2ocg,th2ocm,1)
       call mpscgp(acllwrg,acllwrm,1)
       call mpscgp(tswr1g,tswr1m,1)
@@ -278,13 +414,8 @@ SUBROUTINE cont2mod(n,xarg)
       call mpscgp(albgmaxg,albgmaxm,1)
       call mpscgp(rcritg,rcritm,NLEV)
       call mpscgp(alpha1g,alpha1m,1)
-!      call mpscgp(beta1g,beta1m,1)
-!      call mpscgp(gamma1g,gamma1m,1)
-! A.B 
- !     print*, "Min and Max of ss_field_hor",MINVAL(ss_field_hor(:)),maxval(ss_field_hor(:))
-      call mpscgp(ss_flux_gp,ss_flux_hor,1)
-      call mpscgp(ss_field_gp,ss_field_hor,1)
-      
+      call mpscgp(beta1g,beta1m,1)
+      call mpscgp(gamma1g,gamma1m,1)
 
 #elif defined (VECSTSRF)
      select case (n-nx_ocean)
@@ -386,7 +517,7 @@ SUBROUTINE cont2mod(n,xarg)
       print '(a,i6,a,g30.20)','setting parameter ',ix+1,' to ',pmod
       ix = kix
     end subroutine setmod_d01
-    subroutine setmodarray_d01(kmod,pmod,kix,parr,varname)
+    subroutine setmodarray_d01(kmod,pmod,kix,parr)
 ! purpose: perturb model parameter array
 ! input:
 !      integer :: kix     ! index
@@ -397,21 +528,13 @@ SUBROUTINE cont2mod(n,xarg)
       integer :: kmod,kix
       real :: pmod(kmod)
       real :: parr
-      character(len=*), intent(in) :: varname
-      
-    ! Special treatment only for ss
-      ! if (trim(varname) == 'ss' .and. &
-      !   minval(xsave(kix:kix+kmod-1)) == 0.0 .and. &
-      !   maxval(xsave(kix:kix+kmod-1)) == 0.0) then
-
-      ! pmod(:) = 0.0
-
-      ! else
-
+      if (ix+1 .ne. kix) then
+         print*,ix+1,kix
+         stop "wrong index in setmodarray!"
+      end if
       pmod(:) = parr/(1+exp(-(prior(kix:kix+kmod-1) + std_prior(kix:kix+kmod-1) * xsave(kix:kix+kmod-1)))) 
       print '(a,i6,a,2g30.20)','setting parameter ',ix+1,' to (max/min)',maxval(pmod(:)),minval(pmod(:))
       ix = kix + kmod - 1
-!      endif
     end subroutine setmodarray_d01
 
     subroutine setmodarray(kmod,pmod,kix)
@@ -613,11 +736,8 @@ SUBROUTINE mod2cont(n,par)
      call setcontrolarray_d01(NUGP,rcritg(:,9),1.0)
      call setcontrolarray_d01(NUGP,rcritg(:,10),1.0)
      call setcontrolarray_d01(NUGP,alpha1g,5.0)
-!     call setcontrolarray_d01(NUGP,beta1g,5.0)
-!     call setcontrolarray_d01(NUGP,gamma1g,5.0)
-
-      call setcontrolarray_d01(NUGP,ss_flux_gp,0.3)
-      call setcontrolarray_d01(NUGP,ss_field_gp,0.5)
+     call setcontrolarray_d01(NUGP,beta1g,5.0)
+     call setcontrolarray_d01(NUGP,gamma1g,5.0)
 
 #elif (NX-NX_OCEAN)==16384
 ! selected from the 36 parameters based on adjoint sensitivity

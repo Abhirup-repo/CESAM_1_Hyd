@@ -21,14 +21,14 @@
 !*    2.2) namelist parameters (see *sub* radini)
 !
 
-      real    :: gsol0   = SOLCON_EARTH  ! solar constant
+      real    :: gsol0   = 1367.0000 !SOLCON_EARTH  ! solar constant
       real    :: clgray  = -1.0   ! cloud grayness (-1 = computed)
-      real    :: th2oc   = 0.04   ! absorption coefficient h2o continuum (lwr)
-      real    :: tswr1   = 0.04   ! tuning of cloud albedo range1
-      real    :: tswr2   = 0.048  ! tuning of cloud back scattering c. range2
-      real    :: tswr3   = 0.004  ! tuning of cloud s. scattering alb. range2
+      real    :: th2oc   = 0.02   ! absorption coefficient h2o continuum (lwr)
+      real    :: tswr1   = 0.08   ! tuning of cloud albedo range1
+      real    :: tswr2   = 0.08  ! tuning of cloud back scattering c. range2
+      real    :: tswr3   = 0.0055  ! tuning of cloud s. scattering alb. range2
       real    :: tpofmt  = 1.00   ! tuning of point of mean transmittance
-      real    :: acllwr  = 0.100  ! mass absorption coefficient for clouds (lwr)
+      real    :: acllwr  = 0.05  ! mass absorption coefficient for clouds (lwr)
       integer :: no3     = 1      ! switch for ozon (1/0=yes/no)
       integer :: nsol    = 1      ! switch for solang (1/0=yes/no)
       integer :: nswr    = 1      ! switch for swr (1/0=yes/no)
@@ -922,9 +922,9 @@
 !
       zcs(:) = 1.0 ! Clear sky fraction (1.0 = clear sky)
       zmu00  = 0.5
-      zb3(:)    = tswr1 * SQRT(zmu00) / zmu00
-      zb4(:)    = tswr2 * SQRT(zmu00)
-      zb5(:)    = tswr3 * zmu00 * zmu00
+      zb3(:)    = tswr1m(:) * SQRT(zmu00) / zmu00
+      zb4(:)    = tswr2m(:) * SQRT(zmu00)
+      zb5(:)    = tswr3m(:) * zmu00 * zmu00
 !
 !     prescribed
 !
@@ -987,12 +987,12 @@
          ztcl2s(:,jlev)=4.*zu(:)/zr(:)
          zrcl2s(:,jlev)=(zu(:)*zu(:)-1.)/zr(:)*(zexp(:)-1./zexp(:))
 
-         zb1(:)  = tswr1*SQRT(zmu0(:))
+         zb1(:)  = tswr1m(:)*SQRT(zmu0(:))
       end where ! added, FastOpt
 !$TAF STORE zb2,zexp,zom0,zr,zu,zun,zuz = innern, REC = jlev + nstep2 * NLEV
       where(losun(:) .and. (dcc(:,jlev) > 0.)) ! added, FastOpt
-         zb2(:)  = tswr2*SQRT(zmu0(:))/ALOG(3.+0.1*ztau(:))
-         zom0(:) = min(0.9999,1.-tswr3*zmu0(:)*zmu0(:)*zlog(:))
+         zb2(:)  = tswr2m(:)*SQRT(zmu0(:))/ALOG(3.+0.1*ztau(:))
+         zom0(:) = min(0.9999,1.-tswr3m(:)*zmu0(:)*zmu0(:)*zlog(:))
          zun(:)  = 1.0 - zom0(:)
          zuz(:)  = zun(:) + 2.0 * zb2(:) * zom0(:)
          zu(:)   = SQRT(zuz(:)/zun(:))
@@ -1404,7 +1404,7 @@
        zzf2=zfco2*zqco2*(zsigh2(jlep)-zsigh2(jlev))*0.5/ga/100000.
 !       zzf3=-1.66*acllwr*1000.*dsigma(jlev)/ga
 ! guokun changed for 2d acllwrm
-       zzf3(:)=-1.66*acllwr*1000.*dsigma(jlev)/ga
+       zzf3(:)=-1.66*acllwrm(:)*1000.*dsigma(jlev)/ga
        zsfac(:)=zzf1*zps2(:)
        zq(:,jlev)=zfh2o*zsfac(:)*dq(:,jlev)
        zqo3(:,jlev)=zfo3*zsfac(:)*dqo3(:,jlev)
@@ -1452,12 +1452,12 @@
 !     b) continuum
 !
 ! FastOpt, note: switching off th2oc substantially smoothens cost function. min() is not the reason;
-        if(th2oc > 0.) then
+!        if(th2oc > 0.) then
 ! guokun changed to allow 2D th2ocm
-!         where(th2ocm(:) > 0.) 
-         zah2o(:)=AMIN1(zah2o(:)+(1.-exp(-th2oc*zsumwv(:))),1.)
-!         endwhere
-        endif
+         where(th2ocm(:) > 0.) 
+         zah2o(:)=AMIN1(zah2o(:)+(1.-exp(-th2ocm(:)*zsumwv(:))),1.)
+         endwhere
+!        endif
 !
 !     co2 absorption:
 !
@@ -1503,7 +1503,7 @@
          jlep2=jlev2+1
 !$TAF STORE ztaucs(:,jlev2),ztau0 = innern, REC = jlev2+nstep2*NLEV
 !FastOpt: above rec counter correct, because of enclosing 'if'.
-         ztau0(:)=ztaucs(:,jlev2)/ztau0(:)*ztaucc0(:,jlev2)*tpofmt
+         ztau0(:)=ztaucs(:,jlev2)/ztau0(:)*ztaucc0(:,jlev2)*tpofmtm(:)
 ! FastOpt         ztau0(:)=AMIN1(1.-zero,MAX(zero,ztau0(:)))
          ztau0(:)=fominf(NHOR,1.-zero,fomaxf(NHOR,zero,ztau0(:),tune2),tune2) ! FastOpt, changed
 !$TAF STORE ztau0 = innern, REC = jlev2 + nstep2 * NLEV
